@@ -1,0 +1,16 @@
+{
+  "name": "aviac",
+  "description": "Aviac is an asynchronous video, image and audio compressor that uses Sharp and FFmpeg to process your files.",
+  "version": "0.0.1",
+  "module": "index.ts",
+  "type": "module",
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "sharp": "^0.34.5"
+  }
+}
