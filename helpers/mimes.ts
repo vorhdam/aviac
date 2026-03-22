@@ -93,9 +93,9 @@ const MimeFFmpegDict = {
 const VideoCodecs: Partial<Record<FFmpeg, { vcodec: string; acodec: string }>> =
   {
     mp4: { vcodec: "libx264", acodec: "aac" },
-    webm: { vcodec: "libvpx", acodec: "libopus" },
-    matroska: { vcodec: "libx264", acodec: "aac" },
+    webm: { vcodec: "libvpx-vp9", acodec: "libopus" },
     mov: { vcodec: "libx264", acodec: "aac" },
+    matroska: { vcodec: "libx264", acodec: "aac" },
     avi: { vcodec: "libxvid", acodec: "libmp3lame" },
     flv: { vcodec: "libx264", acodec: "aac" },
   };

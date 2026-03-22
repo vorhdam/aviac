@@ -1,14 +1,21 @@
-import { FFmpegError } from "./errors";
+import { FFmpegError } from "@/helpers/errors";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 
 export async function runFFmpeg(
-  input: Uint8Array,
+  input: Uint8Array | File,
   args: string[],
   timeout: number = 30000,
 ): Promise<Uint8Array> {
+  const tmpPath = join(tmpdir(), `ffmpeg-${crypto.randomUUID()}.tmp`);
+  await Bun.write(tmpPath, input);
+
+  // Replace pipe:0 with the actual file path
+  const resolvedArgs = args.map((a) => (a === "pipe:0" ? tmpPath : a));
+
   const process = Bun.spawn(
-    ["ffmpeg", "-hide_banner", "-loglevel", "error", ...args],
+    ["ffmpeg", "-hide_banner", "-loglevel", "error", ...resolvedArgs],
     {
-      stdin: "pipe",
       stdout: "pipe",
       stderr: "pipe",
     },
@@ -16,44 +23,24 @@ export async function runFFmpeg(
 
   const timer = setTimeout(() => {
     process.kill();
-    throw new FFmpegError(
-      124,
-      "The FFmpeg process timed out and has been terminated.",
-    );
   }, timeout);
 
-  try {
-    process.stdin.write(input);
-  } finally {
-    process.stdin.end();
-  }
+  // Use the Response API to aggregate the output stream into one buffer efficiently
+  const outResponse = new Response(process.stdout);
+  const errResponse = new Response(process.stderr);
 
-  const chunks: Uint8Array[] = [];
-  let totalBytes = 0;
+  const [result, errorText, exitCode] = await Promise.all([
+    outResponse.arrayBuffer(),
+    errResponse.text(),
+    process.exited,
+  ]);
 
-  for await (const chunk of process.stdout) {
-    chunks.push(chunk);
-    totalBytes += chunk.byteLength;
-  }
-
-  const exitCode = await process.exited;
   clearTimeout(timer);
+  await Bun.file(tmpPath).delete(); // Clean up immediately
 
   if (exitCode !== 0) {
-    const errorChunks: Uint8Array[] = [];
-    for await (const chunk of process.stderr) {
-      errorChunks.push(chunk);
-    }
-    const errorText = Buffer.concat(errorChunks).toString("utf8").trim();
-    throw new FFmpegError(exitCode, errorText);
+    throw new FFmpegError(exitCode ?? 1, errorText.trim() || "Unknown error");
   }
 
-  const result = new Uint8Array(totalBytes);
-  let offset = 0;
-  for (const chunk of chunks) {
-    result.set(chunk, offset);
-    offset += chunk.byteLength;
-  }
-
-  return result;
+  return new Uint8Array(result);
 }

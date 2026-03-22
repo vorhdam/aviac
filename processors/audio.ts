@@ -1,12 +1,12 @@
-import { AviacError } from "../helpers/errors";
-import { runFFmpeg } from "../helpers/ffmpeg";
+import { AviacError } from "@/helpers/errors";
+import { runFFmpeg } from "@/helpers/ffmpeg";
 import {
   AudioCodecs,
   isAudio,
   MimeFFmpegDict,
   type Mime,
-} from "../helpers/mimes";
-import { BaseProcessor } from "./base";
+} from "@/helpers/mimes";
+import { BaseProcessor } from "@/processors/base";
 
 export type AudioConfig = {
   mime?: Extract<Mime, `audio/${string}`>;
@@ -58,7 +58,7 @@ export class AudioProcessor extends BaseProcessor<AudioProcessor> {
   }
 
   /** Set bitrate. @example processor.bitrate("192k")*/
-  birate(bitrate: string): this {
+  bitrate(bitrate: string): this {
     this.config.bitrate = bitrate;
     return this;
   }
@@ -83,22 +83,14 @@ export class AudioProcessor extends BaseProcessor<AudioProcessor> {
 
   async execute(): Promise<File> {
     const outputMime = this.config.mime ?? "audio/webm";
-    const inputExtension = MimeFFmpegDict[this.file.type as Mime] ?? "webm";
     const outputExtension = MimeFFmpegDict[outputMime] ?? "webm";
     const codec = AudioCodecs[outputExtension] ?? "copy";
 
     const args: string[] = [
-      // Input from stdin
-      "-f",
-      inputExtension,
       "-i",
       "pipe:0",
-
-      // Codec
       "-acodec",
       codec,
-
-      // Optional quality controls
       ...(this.config.bitrate ? ["-b:a", this.config.bitrate] : []),
       ...(this.config.sampleRate
         ? ["-ar", String(this.config.sampleRate)]
@@ -106,20 +98,16 @@ export class AudioProcessor extends BaseProcessor<AudioProcessor> {
       ...(this.config.channels
         ? ["-ac", this.config.channels === "mono" ? "1" : "2"]
         : []),
-
-      // Caller-supplied extras
       ...(this.config.args ?? []),
-
-      // Output to stdout
       "-f",
       outputExtension,
       "pipe:1",
     ];
 
-    const input = new Uint8Array(await this.file.arrayBuffer());
-    const output = await runFFmpeg(input, args);
+    const output = await runFFmpeg(this.file, args);
 
-    const name = this.createName(outputMime);
-    return new File([output], name, { type: outputMime });
+    return new File([output], this.createName(outputMime), {
+      type: outputMime,
+    });
   }
 }

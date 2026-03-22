@@ -1,12 +1,12 @@
-import { AviacError } from "../helpers/errors";
-import { runFFmpeg } from "../helpers/ffmpeg";
+import { AviacError } from "@/helpers/errors";
+import { runFFmpeg } from "@/helpers/ffmpeg";
 import {
   isVideo,
   MimeFFmpegDict,
   VideoCodecs,
   type Mime,
-} from "../helpers/mimes";
-import { BaseProcessor } from "./base";
+} from "@/helpers/mimes";
+import { BaseProcessor } from "@/processors/base";
 
 export type VideoConfig = {
   mime?: Extract<Mime, `video/${string}`>;
@@ -102,60 +102,32 @@ export class VideoProcessor extends BaseProcessor<VideoProcessor> {
   }
 
   async execute(): Promise<File> {
-    console.log("Started video processing...");
     const outputMime = this.config.mime ?? "video/webm";
-    const inputExtension = MimeFFmpegDict[this.file.type as Mime] ?? "webm";
     const outputExtension = MimeFFmpegDict[outputMime] ?? "webm";
     const codecs = VideoCodecs[outputExtension] ?? {
-      vcodec: "copy",
-      acodec: "copy",
+      vcodec: "libx264",
+      acodec: "aac",
     };
 
     const args: string[] = [
-      // Input: read from stdin
-      "-f",
-      inputExtension,
       "-i",
       "pipe:0",
-
-      // Video codec
       "-vcodec",
       codecs.vcodec,
-
-      // Audio
-      ...(this.config.mute
-        ? ["-an"]
-        : [
-            "-acodec",
-            codecs.acodec,
-            ...(this.config.audioBitrate
-              ? ["-b:a", this.config.audioBitrate]
-              : []),
-          ]),
-
-      // Optional video filters
-      ...(this.config.videoBitrate ? ["-b:v", this.config.videoBitrate] : []),
-      ...(this.config.fps ? ["-r", String(this.config.fps)] : []),
-      ...(this.config.resize
-        ? ["-vf", `scale=${this.config.resize[0]}:${this.config.resize[1]}`]
+      ...(this.config.mute ? ["-an"] : ["-acodec", codecs.acodec]),
+      ...(outputExtension === "webm"
+        ? ["-row-mt", "1", "-deadline", "realtime"]
         : []),
-
-      // Extra caller-supplied flags
+      ...(outputExtension === "mp4" ? ["-movflags", "+faststart"] : []),
       ...(this.config.args ?? []),
-
-      // Output: write to stdout, movflags required for streaming mp4
-      ...(outputExtension === "mp4"
-        ? ["-movflags", "frag_keyframe+empty_moov"]
-        : []),
       "-f",
       outputExtension,
       "pipe:1",
     ];
 
-    const input = new Uint8Array(await this.file.arrayBuffer());
-    const output = await runFFmpeg(input, args);
-
-    const name = this.createName(outputMime);
-    return new File([output], name, { type: outputMime });
+    const output = await runFFmpeg(this.file, args);
+    return new File([output], this.createName(outputMime), {
+      type: outputMime,
+    });
   }
 }

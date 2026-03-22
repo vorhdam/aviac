@@ -7,5 +7,9 @@
     "source.organizeImports": "always"
   },
   "editor.formatOnSave": true,
-  "editor.formatOnPaste": true
+  "editor.formatOnPaste": true,
+  "material-icon-theme.folders.associations": {
+    "processors": "generator",
+    "helpers": "middleware"
+  }
 }

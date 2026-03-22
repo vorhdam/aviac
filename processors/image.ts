@@ -1,13 +1,13 @@
+import { AviacError } from "@/helpers/errors.ts";
+import { isImage } from "@/helpers/mimes.ts";
+import { BaseProcessor } from "@/processors/base.ts";
 import sharp, {
-  type ResizeOptions,
-  type WebpOptions,
   type AvifOptions,
   type JpegOptions,
   type PngOptions,
+  type ResizeOptions,
+  type WebpOptions,
 } from "sharp";
-import { BaseProcessor } from "./base.ts";
-import { isImage } from "../helpers/mimes.ts";
-import { AviacError } from "../helpers/errors.ts";
 
 type ResizeConfig = {
   width?: number;
@@ -110,7 +110,9 @@ export class ImageProcessor extends BaseProcessor<ImageProcessor> {
         break;
 
       case "png":
-        outputBuffer = await pipeline.png(this.config.output.options).toBuffer();
+        outputBuffer = await pipeline
+          .png(this.config.output.options)
+          .toBuffer();
         outputMime = "image/png";
         break;
 

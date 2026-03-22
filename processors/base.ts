@@ -1,5 +1,5 @@
-import { AviacError } from "../helpers/errors";
-import { mimeToExtension } from "../helpers/mimes";
+import { AviacError } from "@/helpers/errors";
+import { mimeToExtension } from "@/helpers/mimes";
 
 export abstract class BaseProcessor<T extends BaseProcessor<T>> {
   protected readonly file: File;
