@@ -13,6 +13,7 @@ export type VideoConfig = {
   videoBitrate?: string;
   audioBitrate?: string;
   resize?: [number, number];
+  saturation?: number;
   fps?: number;
   mute?: boolean;
   args?: string[];
@@ -65,37 +66,64 @@ export class VideoProcessor extends BaseProcessor<VideoProcessor> {
     return this;
   }
 
-  /** Set video bitrate. @example processor.videoBitrate("2M")*/
+  /** Set video bitrate. 
+   * @param bitrate The bitrate of the video channel.
+   * @example processor.videoBitrate("2M")
+  */
   videoBitrate(bitrate: string): this {
     this.config.videoBitrate = bitrate;
     return this;
   }
 
-  /** Set video bitrate. @example processor.audioBitrate("192k")*/
+  /** Set audio bitrate. 
+   * @param bitrate The bitrate of the audio channel.
+   * @example processor.audioBitrate("192k")
+  */
   audioBitrate(bitrate: string): this {
     this.config.audioBitrate = bitrate;
     return this;
   }
 
-  /** Resize output. Pass -1 for a dimension to preserve aspect ratio. @example processor.resize(1920, 1080)*/
+  /** Adjust video output scale.
+   * @param width Pass -1 for a dimension to preserve aspect ratio.
+   * @param height Pass -1 for a dimension to preserve aspect ratio.
+   * @example processor.resize(1920, 1080)
+  */
   resize(width: number, height: number): this {
     this.config.resize = [width, height];
     return this;
   }
 
-  /** Set frame per second. @example processor.fps(24)*/
+  /** * Adjust video saturation.
+   * @param value 0 is grayscale, 1 is default, >1 increases saturation.
+   * @example processor.saturation(1.5) 
+  */
+  saturation(value: number): this {
+    this.config.saturation = value;
+    return this;
+  }
+
+  /** Set frame per second.
+   * @param value sets the playback fps to a number.
+   * @example processor.fps(24)
+  */
   fps(value: number): this {
     this.config.fps = value;
     return this;
   }
 
-  /** Remove audio from video. @example processor.mute()*/
+  /** Remove audio from video. 
+   * @example processor.mute()
+  */
   mute(): this {
     this.config.mute = true;
     return this;
   }
 
-  /** Extend FFmpeg arguments. @example processor.args("-b:a 192k", "-b:v 2M")*/
+  /** Extend FFmpeg arguments. 
+   * @param args Additional FFmpeg arguments.
+   * @example processor.args("-b:a 192k", "-b:v 2M")
+  */
   args(args: string[]): this {
     this.config.args = args;
     return this;
@@ -109,17 +137,36 @@ export class VideoProcessor extends BaseProcessor<VideoProcessor> {
       acodec: "aac",
     };
 
+    const filters: string[] = [];
+
+    // resize
+    if (this.config.resize) 
+      filters.push(`scale=${this.config.resize[0]}:${this.config.resize[1]}`);
+    // saturation
+    if (this.config.saturation) 
+      filters.push(`hue=s=${this.config.saturation}`);
+    
+
     const args: string[] = [
       "-i",
       "pipe:0",
-      "-vcodec",
-      codecs.vcodec,
+      
+      // codec
+      "-vcodec", codecs.vcodec,
       ...(this.config.mute ? ["-an"] : ["-acodec", codecs.acodec]),
-      ...(outputExtension === "webm"
-        ? ["-row-mt", "1", "-deadline", "realtime"]
-        : []),
+      // bitrates
+      ...(this.config.videoBitrate ? ["-b:v", this.config.videoBitrate] : []),
+      ...(this.config.audioBitrate && !this.config.mute ? ["-b:a", this.config.audioBitrate] : []),
+      // filters
+      ...(filters.length > 0 ? ["-vf", filters.join(",")] : []),
+      // fps
+      ...(this.config.fps ? ["-r", this.config.fps.toString()] : []),
+      // performance
+      ...["-deadline", "realtime", "-cpu-used", "8", "-threads", "0", "-row-mt", "1"],
       ...(outputExtension === "mp4" ? ["-movflags", "+faststart"] : []),
+      // extensions
       ...(this.config.args ?? []),
+      
       "-f",
       outputExtension,
       "pipe:1",

@@ -23,12 +23,14 @@ type OutputFormat =
 
 export type ImageConfig = {
   resize: ResizeConfig | null;
+  saturation: number;
   output: OutputFormat;
 };
 
 export class ImageProcessor extends BaseProcessor<ImageProcessor> {
   private config: ImageConfig = {
     resize: null,
+    saturation: 1,
     output: { format: "webp" },
   };
 
@@ -44,31 +46,52 @@ export class ImageProcessor extends BaseProcessor<ImageProcessor> {
    * Resize the image. Both width and height are optional (Sharp will
    * preserve aspect ratio when only one dimension is provided).
    * @example processor.resize(1920, 1080, { fit: "inside" })
-   */
+  */
   resize(width?: number, height?: number, options?: ResizeOptions): this {
     this.config.resize = { width, height, options };
     return this;
   }
 
-  /** Convert to WebP. @example processor.webp({ quality : 75 })*/
+  /** * Adjust image saturation.
+   * @param value 0 is grayscale, 1 is default, >1 increases saturation.
+   * @example processor.saturation(1.5)
+  */
+  saturation(value: number): this {
+    this.config.saturation = value;
+    return this;
+  }
+
+  /** Convert to WebP.
+   * @param options Sharp WebP options.
+   * @example processor.webp({ quality : 75 })
+  */
   webp(options?: WebpOptions): this {
     this.config.output = { format: "webp", options };
     return this;
   }
 
-  /** Convert to AVIF. @example processor.avif({ quality : 75 })*/
+  /** Convert to AVIF.
+   * @param options Sharp AVIF options.
+   * @example processor.avif({ quality : 75 })
+  */
   avif(options?: AvifOptions): this {
     this.config.output = { format: "avif", options };
     return this;
   }
 
-  /** Convert to JPEG. @example processor.jpeg({ quality : 75 })*/
+  /** Convert to JPEG.
+   * @param options Sharp JPEG options.
+   * @example processor.jpeg({ quality : 75 })
+  */
   jpeg(options?: JpegOptions): this {
     this.config.output = { format: "jpeg", options };
     return this;
   }
 
-  /** Convert to PNG. @example processor.png({ quality : 75 })*/
+  /** Convert to PNG.
+   * @param options Sharp PNG options.
+   * @example processor.png({ quality : 75 })
+  */
   png(options?: PngOptions): this {
     this.config.output = { format: "png", options };
     return this;
@@ -82,6 +105,12 @@ export class ImageProcessor extends BaseProcessor<ImageProcessor> {
     if (this.config.resize) {
       const { width, height, options } = this.config.resize;
       pipeline = pipeline.resize(width, height, options);
+    }
+
+    if (this.config.saturation) {
+      pipeline = pipeline.modulate({
+        saturation: this.config.saturation,
+      });
     }
 
     let outputMime: string;

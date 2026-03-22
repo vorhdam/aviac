@@ -35,3 +35,17 @@ If you want to turn any audio into a **.webm** file use this.
 const audioProcess = new AudioProcessor(file);
 const result = await audioProcess.webm().execute();
 ```
+
+## Statistics
+
+In this example I used downloaded sample media. Then compressed them to formats (WEBP and WEBM)  that are super web and cloud friendly.
+
+*These tests were produced on Windows 11, 16GB RAM in a Bun environment.*
+
+| Old File Type | Old File Size | New File Type | New File Size | Processing Time | Storage Saved |
+|---|---|---|---|---|---|
+| Image (png) | 2,013 KB | Image (webp) | 421 KB | 841 ms | 79.09% |
+| Video (mp4) | 367,336 KB | Video (webm) | 25,824 KB | 10650 ms | 92.96% |
+| Audio (wav) | 23,556 KB | Audio (webm) | 1,891 KB | 817 ms | 91.97% |
+
+**These statistics show that it is often worth compressing the files as it can save a lot of space later on the cloud. These computing cost are usually negligable compared to storage costs your providers might charge.**

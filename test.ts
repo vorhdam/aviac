@@ -38,8 +38,8 @@ async function testVideo() {
 }
 
 async function testAudio() {
-  const buffer = Bun.file("./assets/audios/sample.flac");
-  const file = new File([buffer], "audio.flac", { type: "audio/flac" });
+  const buffer = Bun.file("./assets/audios/sample.wav");
+  const file = new File([buffer], "audio.wav", { type: "audio/wav" });
   try {
     console.time("Audio processing finished.");
     const audioProcess = new AudioProcessor(file);

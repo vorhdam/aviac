@@ -57,25 +57,37 @@ export class AudioProcessor extends BaseProcessor<AudioProcessor> {
     return this;
   }
 
-  /** Set bitrate. @example processor.bitrate("192k")*/
+  /** Set bitrate. 
+   * @param bitrate The bitrate of the audio.
+   * @example processor.bitrate("192k")
+  */
   bitrate(bitrate: string): this {
     this.config.bitrate = bitrate;
     return this;
   }
 
-  /** Set sample rate. @example processor.sampleRate(44100)*/
+  /** Set sample rate. 
+   * @param hertz The audio sample rate in hertz.
+   * @example processor.sampleRate(44100)
+  */
   sampleRate(hertz: number): this {
     this.config.sampleRate = hertz;
     return this;
   }
 
-  /** Set channel type. @example processor.channels("stereo")*/
+  /** Set channel type. 
+   * @param channels Select from "mono" or "stereo" channels.
+   * @example processor.channels("stereo")
+  */
   channels(channels: "mono" | "stereo"): this {
     this.config.channels = channels;
     return this;
   }
 
-  /** Extend FFmpeg arguments. @example processor.args("-b:a 192k")*/
+  /** Extend FFmpeg arguments. 
+   * @param args Additional FFmpeg arguments.
+   * @example processor.args("-b:a 192k")
+  */
   args(args: string[]): this {
     this.config.args = args;
     return this;
@@ -89,16 +101,22 @@ export class AudioProcessor extends BaseProcessor<AudioProcessor> {
     const args: string[] = [
       "-i",
       "pipe:0",
-      "-acodec",
-      codec,
+
+      // codec
+      "-acodec", codec,
+      // bitrate
       ...(this.config.bitrate ? ["-b:a", this.config.bitrate] : []),
+      // sample rate
       ...(this.config.sampleRate
         ? ["-ar", String(this.config.sampleRate)]
         : []),
+      // channels
       ...(this.config.channels
         ? ["-ac", this.config.channels === "mono" ? "1" : "2"]
         : []),
+      // extensions
       ...(this.config.args ?? []),
+      
       "-f",
       outputExtension,
       "pipe:1",
