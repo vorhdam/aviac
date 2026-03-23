@@ -1,8 +1,9 @@
 # dependencies (bun install)
 node_modules
 
-# assets
-assets
+# test subjects
+tests/
+
 .vscode/
 
 # output

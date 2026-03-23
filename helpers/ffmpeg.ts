@@ -10,7 +10,6 @@ export async function runFFmpeg(
   const tmpPath = join(tmpdir(), `ffmpeg-${crypto.randomUUID()}.tmp`);
   await Bun.write(tmpPath, input);
 
-  // Replace pipe:0 with the actual file path
   const resolvedArgs = args.map((a) => (a === "pipe:0" ? tmpPath : a));
 
   const process = Bun.spawn(
@@ -25,7 +24,6 @@ export async function runFFmpeg(
     process.kill();
   }, timeout);
 
-  // Use the Response API to aggregate the output stream into one buffer efficiently
   const outResponse = new Response(process.stdout);
   const errResponse = new Response(process.stderr);
 
@@ -36,7 +34,7 @@ export async function runFFmpeg(
   ]);
 
   clearTimeout(timer);
-  await Bun.file(tmpPath).delete(); // Clean up immediately
+  await Bun.file(tmpPath).delete();
 
   if (exitCode !== 0) {
     throw new FFmpegError(exitCode ?? 1, errorText.trim() || "Unknown error");
