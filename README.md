@@ -3,7 +3,7 @@
 An Asynchronous Video, Image and Audio Compresser that uses Sharp and FFmpeg to process your files in a Bun and Typescript server environment.
 
 <p align="center">
-    <img src="./assets/banner.png"/>
+    <img src="./assets/header.png"/>
 </p>
 
 It uses Sharp to compress images in memory with great quality and sub-second duration.
@@ -51,5 +51,7 @@ _These tests were produced on Windows 11, 16GB RAM in a Bun environment._
 | Image (png)   | 2,013 KB      | Image (webp)  | 421 KB        | 841 ms          | 79.09%        |
 | Video (mp4)   | 367,336 KB    | Video (webm)  | 25,824 KB     | 10650 ms        | 92.96%        |
 | Audio (wav)   | 23,556 KB     | Audio (webm)  | 1,891 KB      | 817 ms          | 91.97%        |
+
+You can find code that was used to produce these results in the [test.ts](https://github.com/vorhdam/aviac/blob/main/test.ts) file
 
 **These statistics show that it is often worth compressing the files as it can save a lot of space later on the cloud. These computing cost are usually negligable compared to storage costs your providers might charge.**

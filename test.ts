@@ -1,14 +1,14 @@
 import { AudioProcessor, ImageProcessor, VideoProcessor } from "@/index";
 
 async function testImage() {
-  const buffer = Bun.file("./assets/images/sample.png");
+  const buffer = Bun.file("./tests/images/sample.png");
   const file = new File([buffer], "image.png", { type: "image/png" });
   try {
     console.time("Image processing finished.");
     const imageProcess = new ImageProcessor(file);
     const webp = await imageProcess.webp().execute();
     Bun.write(
-      "./assets/exports/image.webp",
+      "./tests/exports/image.png",
       Buffer.from(await webp.arrayBuffer()),
     );
     console.timeEnd("Image processing finished.");
@@ -18,7 +18,7 @@ async function testImage() {
 }
 
 async function testVideo() {
-  const buffer = Bun.file("./assets/videos/sample.mp4");
+  const buffer = Bun.file("./tests/videos/sample.mp4");
   const file = new File([buffer], "video.mp4", { type: "video/mp4" });
   try {
     console.time("Video processing finished.");
@@ -28,7 +28,7 @@ async function testVideo() {
       .args(["-deadline", "realtime", "-cpu-used", "8", "-threads", "0"])
       .execute();
     Bun.write(
-      "./assets/exports/video.webm",
+      "./tests/exports/video.webm",
       Buffer.from(await webm.arrayBuffer()),
     );
     console.timeEnd("Video processing finished.");
@@ -38,14 +38,14 @@ async function testVideo() {
 }
 
 async function testAudio() {
-  const buffer = Bun.file("./assets/audios/sample.wav");
+  const buffer = Bun.file("./tests/audios/sample.wav");
   const file = new File([buffer], "audio.wav", { type: "audio/wav" });
   try {
     console.time("Audio processing finished.");
     const audioProcess = new AudioProcessor(file);
     const webm = await audioProcess.webm().execute();
     Bun.write(
-      "./assets/exports/audio.webm",
+      "./tests/exports/audio.webm",
       Buffer.from(await webm.arrayBuffer()),
     );
     console.timeEnd("Audio processing finished.");
